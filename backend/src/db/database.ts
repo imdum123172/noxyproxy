@@ -1,22 +1,29 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
 
-let db: sqlite3.Database;
+let db: sqlite3.Database | null = null;
 
 export function initDatabase() {
-  const dbPath = path.join(__dirname, '../../data/noxyproxy.db');
+  try {
+    const dbPath = path.join(__dirname, '../../data/noxyproxy.db');
 
-  db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error('Database connection error:', err);
-    } else {
-      console.log('✅ Connected to SQLite database');
-      createTables();
-    }
-  });
+    db = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        console.error('Database connection error:', err);
+      } else {
+        console.log('✅ Connected to SQLite database');
+        createTables();
+      }
+    });
+  } catch (error) {
+    console.warn('⚠️  SQLite3 not available, running without persistent storage');
+    console.warn('Install build tools to enable database: apt-get install python3 build-essential');
+  }
 }
 
 function createTables() {
+  if (!db) return;
+
   db.run(`
     CREATE TABLE IF NOT EXISTS scores (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,6 +51,6 @@ function createTables() {
   `);
 }
 
-export function getDatabase(): sqlite3.Database {
+export function getDatabase(): sqlite3.Database | null {
   return db;
 }
